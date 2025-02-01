@@ -1,15 +1,14 @@
 /**
- * Nom du Bot - Un bot WhatsApp
- * Copyright (c) 2024 [Auteur]
+ * Knight Bot - A WhatsApp Bot
+ * Copyright (c) 2024 Professor
  * 
- * Ce programme est un logiciel libre : vous pouvez le redistribuer et/ou le modifier
- * selon les termes de la licence MIT.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the MIT License.
  * 
- * Crédits :
- * - Bibliothèque Baileys par @adiwajshing
- * - Implémentation du code d'appairage inspirée de [Source]
+ * Credits:
+ * - Baileys Library by @adiwajshing
+ * - Pair Code implementation inspired by TechGod143 & DGXEON
  */
-
 require('./settings')
 const { Boom } = require('@hapi/boom')
 const fs = require('fs')
@@ -53,11 +52,11 @@ const store = makeInMemoryStore({
     })
 })
 
-let phoneNumber = ""
+let phoneNumber = "911234567890"
 let owner = JSON.parse(fs.readFileSync('./database/owner.json'))
 
-global.botname = ""
-global.themeemoji = ""
+global.botname = "KNIGHT BOT"
+global.themeemoji = "•"
 
 const pairingCode = !!phoneNumber || process.argv.includes("--pairing-code")
 const useMobile = process.argv.includes("--mobile")
@@ -65,16 +64,16 @@ const useMobile = process.argv.includes("--mobile")
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
 const question = (text) => new Promise((resolve) => rl.question(text, resolve))
          
-async function startBot() {
+async function startXeonBotInc() {
     let { version, isLatest } = await fetchLatestBaileysVersion()
     const { state, saveCreds } = await useMultiFileAuthState(`./session`)
     const msgRetryCounterCache = new NodeCache()
 
-    const Bot = makeWASocket({
+    const XeonBotInc = makeWASocket({
         version,
         logger: pino({ level: 'silent' }),
         printQRInTerminal: !pairingCode,
-        browser: ["OS", "Navigateur", "Version"],
+        browser: ["Ubuntu", "Chrome", "20.0.04"],
         auth: {
             creds: state.creds,
             keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
@@ -90,56 +89,114 @@ async function startBot() {
         defaultQueryTimeoutMs: undefined,
     })
 
-    store.bind(Bot.ev)
+    store.bind(XeonBotInc.ev)
 
-    // Gestion des messages
-    Bot.ev.on('messages.upsert', async chatUpdate => {
+    // Message handling
+    XeonBotInc.ev.on('messages.upsert', async chatUpdate => {
         try {
             const mek = chatUpdate.messages[0]
             if (!mek.message) return
             mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
             if (mek.key && mek.key.remoteJid === 'status@broadcast') return
-            if (!Bot.public && !mek.key.fromMe && chatUpdate.type === 'notify') return
+            if (!XeonBotInc.public && !mek.key.fromMe && chatUpdate.type === 'notify') return
             if (mek.key.id.startsWith('BAE5') && mek.key.id.length === 16) return
             
-            await handleMessages(Bot, chatUpdate, true)
+            await handleMessages(XeonBotInc, chatUpdate, true)
         } catch (err) {
-            console.error("Erreur dans messages.upsert : ", err)
+            console.error("Error in messages.upsert: ", err)
         }
     })
 
-    // Gestion de la connexion
-    Bot.ev.on('connection.update', async (s) => {
+    // Add these event handlers for better functionality
+    XeonBotInc.decodeJid = (jid) => {
+        if (!jid) return jid
+        if (/:\d+@/gi.test(jid)) {
+            let decode = jidDecode(jid) || {}
+            return decode.user && decode.server && decode.user + '@' + decode.server || jid
+        } else return jid
+    }
+
+    XeonBotInc.ev.on('contacts.update', update => {
+        for (let contact of update) {
+            let id = XeonBotInc.decodeJid(contact.id)
+            if (store && store.contacts) store.contacts[id] = { id, name: contact.notify }
+        }
+    })
+
+    XeonBotInc.getName = (jid, withoutContact = false) => {
+        id = XeonBotInc.decodeJid(jid)
+        withoutContact = XeonBotInc.withoutContact || withoutContact 
+        let v
+        if (id.endsWith("@g.us")) return new Promise(async (resolve) => {
+            v = store.contacts[id] || {}
+            if (!(v.name || v.subject)) v = XeonBotInc.groupMetadata(id) || {}
+            resolve(v.name || v.subject || PhoneNumber('+' + id.replace('@s.whatsapp.net', '')).getNumber('international'))
+        })
+        else v = id === '0@s.whatsapp.net' ? {
+            id,
+            name: 'WhatsApp'
+        } : id === XeonBotInc.decodeJid(XeonBotInc.user.id) ?
+            XeonBotInc.user :
+            (store.contacts[id] || {})
+        return (withoutContact ? '' : v.name) || v.subject || v.verifiedName || PhoneNumber('+' + jid.replace('@s.whatsapp.net', '')).getNumber('international')
+    }
+
+    XeonBotInc.public = true
+
+    XeonBotInc.serializeM = (m) => smsg(XeonBotInc, m, store)
+
+    // Handle pairing code
+    if (pairingCode && !XeonBotInc.authState.creds.registered) {
+        if (useMobile) throw new Error('Cannot use pairing code with mobile api')
+
+        let phoneNumber
+        if (!!global.phoneNumber) {
+            phoneNumber = global.phoneNumber
+        } else {
+            phoneNumber = await question(chalk.bgBlack(chalk.greenBright(`Please type your WhatsApp number 😍\nFor example: +917023951514 : `)))
+        }
+
+        phoneNumber = phoneNumber.replace(/[^0-9]/g, '')
+
+        // Request pairing code
+        setTimeout(async () => {
+            let code = await XeonBotInc.requestPairingCode(phoneNumber)
+            code = code?.match(/.{1,4}/g)?.join("-") || code
+            console.log(chalk.black(chalk.bgGreen(`Your Pairing Code : `)), chalk.black(chalk.white(code)))
+        }, 3000)
+    }
+
+    // Connection handling
+    XeonBotInc.ev.on('connection.update', async (s) => {
         const { connection, lastDisconnect } = s
         if (connection == "open") {
-            console.log(chalk.yellow(`🌿 Connecté à => ` + JSON.stringify(Bot.user, null, 2)))
+            console.log(chalk.magenta(` `))
+            console.log(chalk.yellow(`🌿Connected to => ` + JSON.stringify(XeonBotInc.user, null, 2)))
             
-            // Envoyer un message au numéro du bot
-            const botNumber = Bot.user.id.split(':')[0] + '@s.whatsapp.net';
-            await Bot.sendMessage(botNumber, { 
-                text: `🎉 *Hello, Boss !* 🤖\n\n` +
-                      `✅ *Connexion réussie !*\n` +
-                      `🕒 *Heure actuelle :* ${new Date().toLocaleString()}\n` +
-                      `📡 *Statut :* _En ligne et opérationnel_\n\n` +
-                      `💡 *Commandes disponibles :* Tapez *!help* pour voir la liste.\n\n` +
-                      `✨ _Merci d'utiliser ${global.botname || 'ton bot'} !_ 🚀`,
+            // Send message to bot's own number
+            const botNumber = XeonBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
+            await XeonBotInc.sendMessage(botNumber, { 
+                text: `🤖 Bot Connected Successfully!\n\n⏰ Time: ${new Date().toLocaleString()}\n✅ Status: Online and Ready!
+                \n Give a Star ⭐ to our bot:\n https://github.com/mruniquehacker/KnightBot-MD\n ✅Make sure to join below channel`,
                 contextInfo: {
                     forwardingScore: 999,
                     isForwarded: true,
                     forwardedNewsletterMessageInfo: {
-                        newsletterJid: '',
-                        newsletterName: global.botname || '',
+                        newsletterJid: '120363161513685998@newsletter',
+                        newsletterName: 'KnightBot MD',
                         serverMessageId: -1
                     }
                 }
             });
 
             await delay(1999)
-            console.log(chalk.yellow(`\n\n                  ${chalk.bold.blue(`[ ${global.botname || 'BOT'} ]`)}\n\n`))
+            console.log(chalk.yellow(`\n\n                  ${chalk.bold.blue(`[ ${global.botname || 'KNIGHT BOT'} ]`)}\n\n`))
             console.log(chalk.cyan(`< ================================================== >`))
-            console.log(chalk.magenta(`\n${global.themeemoji || ''}`))
-            console.log(chalk.magenta(`${global.themeemoji || ''} NUMÉRO WA : ${owner}`))
-            console.log(chalk.green(`${global.themeemoji || ''} 🤖 Bot connecté avec succès ! ✅`))
+            console.log(chalk.magenta(`\n${global.themeemoji || '•'} YT CHANNEL: MR UNIQUE HACKER`))
+            console.log(chalk.magenta(`${global.themeemoji || '•'} GITHUB: mrunqiuehacker`))
+            console.log(chalk.magenta(`${global.themeemoji || '•'} WA NUMBER: ${owner}`))
+            console.log(chalk.magenta(`${global.themeemoji || '•'} CREDIT: MR UNIQUE HACKER`))
+            console.log(chalk.green(`${global.themeemoji || '•'} 🤖 Bot Connected Successfully! ✅`))
         }
         if (
             connection === "close" &&
@@ -147,42 +204,43 @@ async function startBot() {
             lastDisconnect.error &&
             lastDisconnect.error.output.statusCode != 401
         ) {
-            startBot()
+            startXeonBotInc()
         }
     })
 
-    Bot.ev.on('creds.update', saveCreds)
+    XeonBotInc.ev.on('creds.update', saveCreds)
     
-    // Modifier l'écouteur d'événement pour journaliser l'objet de mise à jour
-    Bot.ev.on('group-participants.update', async (update) => {
-        console.log('Événement de mise à jour de groupe :', JSON.stringify(update, null, 2))
-        await handleGroupParticipantUpdate(Bot, update)
-    })
+    // Modify the event listener to log the update object
+    XeonBotInc.ev.on('group-participants.update', async (update) => {
+        console.log('Group Update Event:', JSON.stringify(update, null, 2));  // Add this line to debug
+        await handleGroupParticipantUpdate(XeonBotInc, update);
+    });
 
-    return Bot
+    return XeonBotInc
 }
 
-// Démarrer le bot avec une gestion des erreurs
-startBot().catch(error => {
-    console.error('Erreur fatale :', error)
+
+// Start the bot with error handling
+startXeonBotInc().catch(error => {
+    console.error('Fatal error:', error)
     process.exit(1)
 })
 
-// Meilleure gestion des erreurs
+// Better error handling
 process.on('uncaughtException', (err) => {
-    console.error('Exception non capturée :', err)
-    // Ne pas quitter immédiatement pour permettre la reconnexion
+    console.error('Uncaught Exception:', err)
+    // Don't exit immediately to allow reconnection
 })
 
 process.on('unhandledRejection', (err) => {
-    console.error('Rejet non géré :', err)
-    // Ne pas quitter immédiatement pour permettre la reconnexion
+    console.error('Unhandled Rejection:', err)
+    // Don't exit immediately to allow reconnection
 })
 
 let file = require.resolve(__filename)
 fs.watchFile(file, () => {
     fs.unwatchFile(file)
-    console.log(chalk.redBright(`Mise à jour ${__filename}`))
+    console.log(chalk.redBright(`Update ${__filename}`))
     delete require.cache[file]
     require(file)
 })
