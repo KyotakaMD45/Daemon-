@@ -81,7 +81,7 @@ const channelInfo = {
         forwardingScore: 999,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
-            newsletterJid: '',
+            newsletterJid: 'https://whatsapp.com/channel/0029VasZ6FaHLHQbLdUKfh33',
             newsletterName: 'KYOTAKA MD',
             serverMessageId: -1
         }
