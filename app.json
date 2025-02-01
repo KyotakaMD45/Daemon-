@@ -1,14 +1,14 @@
 {
-    "name": "KnightBot-MD",
+    "name": "KYOTAKA-MD",
     "description": "Advanced WhatsApp Bot with Multiple Features",
     "keywords": [
         "bot",
         "whatsapp",
         "whatsapp-bot",
-        "knightbot",
+        "Kyotaka-bot",
         "multi-device"
     ],
-    "repository": "https://github.com/mruniquehacker/Knightbot-MD",
+    "repository": "https://github.com/KyotakaMD45/Daemon-.git",
     "stack": "container",
     "env": {
         "SESSION_ID": {
@@ -16,7 +16,7 @@
             "required": false
         },
         "OWNER_NUMBER": {
-            "description": "Your WhatsApp number (e.g., 911234567890)",
+            "description": "Your WhatsApp number (e.g., 2250564458549)",
             "required": false
         },
         "PREFIX": {
