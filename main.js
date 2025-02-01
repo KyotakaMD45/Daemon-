@@ -72,8 +72,8 @@ const viewOnceCommand = require('./commands/viewonce');
 // Global settings
 global.packname = settings.packname;
 global.author = settings.author;
-global.channelLink = "https://whatsapp.com/channel/0029Va90zAnIHphOuO8Msp3A";
-global.ytch = "Mr Unique Hacker";
+global.channelLink = "";
+global.ytch = "Daemon";
 
 // Add this near the top of main.js with other global configurations
 const channelInfo = {
@@ -81,8 +81,8 @@ const channelInfo = {
         forwardingScore: 999,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
-            newsletterJid: '120363161513685998@newsletter',
-            newsletterName: 'KnightBot MD',
+            newsletterJid: '',
+            newsletterName: 'KYOTAKA-MD',
             serverMessageId: -1
         }
     }
@@ -123,9 +123,9 @@ async function handleMessages(sock, messageUpdate, printLog) {
         }
 
         // Basic message response in private chat
-        if (!isGroup && (userMessage === 'hi' || userMessage === 'hello' || userMessage === 'bot' || userMessage === 'hlo' || userMessage === 'hey' || userMessage === 'bro')) {
+        if (!isGroup && (userMessage === 'hi' || userMessage === 'hello' || userMessage === 'kyotaka' || userMessage === 'bonjour' || userMessage === 'hey' || userMessage === 'salut')) {
             await sock.sendMessage(chatId, {
-                text: 'Hi, How can I help you?\nYou can use .menu for more info and commands.',
+                text: 'salut comment je peux t aider\ntu peux utiliser  .menu pour plus de détails .',
                 ...channelInfo
             });
             return;
@@ -257,7 +257,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 // Check if sender is the owner number from settings
                 const senderNumber = senderId.split('@')[0];
                 if (senderNumber !== settings.ownerNumber) {
-                    await sock.sendMessage(chatId, { text: 'Only bot owner can use this command!', ...channelInfo });
+                    await sock.sendMessage(chatId, { text: 'seul mon maître peux utiliser cette cmd !', ... });
                     return;
                 }
                 // Read current data first
