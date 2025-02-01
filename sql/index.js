@@ -1,292 +1,233 @@
-const { loadUserGroupData, saveUserGroupData } = require('../utils');
+const { chargerDonneesGroupe, sauvegarderDonneesGroupe } = require('../utils');
 
-// Add these functions to your SQL helper file
-async function setAntilink(groupId, type, action) {
+// Activation/Désactivation de l'anti-lien
+async function definirAntiLien(idGroupe, etat, action) {
     try {
-        const data = loadUserGroupData();
-        if (!data.antilink) data.antilink = {};
-        if (!data.antilink[groupId]) data.antilink[groupId] = {};
+        const donnees = chargerDonneesGroupe();
+        if (!donnees.antilien) donnees.antilien = {};
+        if (!donnees.antilien[idGroupe]) donnees.antilien[idGroupe] = {};
         
-        data.antilink[groupId] = {
-            enabled: type === 'on',
-            action: action || 'delete' // Set default action to delete
+        donnees.antilien[idGroupe] = {
+            actif: etat === 'activer',
+            action: action || 'supprimer' // Action par défaut : suppression
         };
         
-        saveUserGroupData(data);
+        sauvegarderDonneesGroupe(donnees);
         return true;
-    } catch (error) {
-        console.error('Error setting antilink:', error);
+    } catch (erreur) {
+        console.error('Erreur lors de la configuration de l’anti-lien :', erreur);
         return false;
     }
 }
 
-async function getAntilink(groupId, type) {
+async function obtenirAntiLien(idGroupe) {
     try {
-        const data = loadUserGroupData();
-        if (!data.antilink || !data.antilink[groupId]) return null;
-        
-        return type === 'on' ? data.antilink[groupId] : null;
-    } catch (error) {
-        console.error('Error getting antilink:', error);
+        const donnees = chargerDonneesGroupe();
+        return donnees.antilien?.[idGroupe] || null;
+    } catch (erreur) {
+        console.error('Erreur lors de la récupération de l’anti-lien :', erreur);
         return null;
     }
 }
 
-async function removeAntilink(groupId, type) {
+async function supprimerAntiLien(idGroupe) {
     try {
-        const data = loadUserGroupData();
-        if (data.antilink && data.antilink[groupId]) {
-            delete data.antilink[groupId];
-            saveUserGroupData(data);
+        const donnees = chargerDonneesGroupe();
+        if (donnees.antilien && donnees.antilien[idGroupe]) {
+            delete donnees.antilien[idGroupe];
+            sauvegarderDonneesGroupe(donnees);
         }
         return true;
-    } catch (error) {
-        console.error('Error removing antilink:', error);
+    } catch (erreur) {
+        console.error('Erreur lors de la suppression de l’anti-lien :', erreur);
         return false;
     }
 }
 
-// Add these functions for warning system
-async function incrementWarningCount(groupId, userId) {
+// Gestion des avertissements
+async function ajouterAvertissement(idGroupe, idUtilisateur) {
     try {
-        const data = loadUserGroupData();
-        if (!data.warnings) data.warnings = {};
-        if (!data.warnings[groupId]) data.warnings[groupId] = {};
-        if (!data.warnings[groupId][userId]) data.warnings[groupId][userId] = 0;
+        const donnees = chargerDonneesGroupe();
+        if (!donnees.avertissements) donnees.avertissements = {};
+        if (!donnees.avertissements[idGroupe]) donnees.avertissements[idGroupe] = {};
+        if (!donnees.avertissements[idGroupe][idUtilisateur]) donnees.avertissements[idGroupe][idUtilisateur] = 0;
         
-        data.warnings[groupId][userId]++;
-        saveUserGroupData(data);
-        return data.warnings[groupId][userId];
-    } catch (error) {
-        console.error('Error incrementing warning count:', error);
+        donnees.avertissements[idGroupe][idUtilisateur]++;
+        sauvegarderDonneesGroupe(donnees);
+        return donnees.avertissements[idGroupe][idUtilisateur];
+    } catch (erreur) {
+        console.error('Erreur lors de l’ajout d’un avertissement :', erreur);
         return 0;
     }
 }
 
-async function resetWarningCount(groupId, userId) {
+async function reinitialiserAvertissements(idGroupe, idUtilisateur) {
     try {
-        const data = loadUserGroupData();
-        if (data.warnings && data.warnings[groupId] && data.warnings[groupId][userId]) {
-            data.warnings[groupId][userId] = 0;
-            saveUserGroupData(data);
+        const donnees = chargerDonneesGroupe();
+        if (donnees.avertissements?.[idGroupe]?.[idUtilisateur]) {
+            donnees.avertissements[idGroupe][idUtilisateur] = 0;
+            sauvegarderDonneesGroupe(donnees);
         }
         return true;
-    } catch (error) {
-        console.error('Error resetting warning count:', error);
+    } catch (erreur) {
+        console.error('Erreur lors de la réinitialisation des avertissements :', erreur);
         return false;
     }
 }
 
-// Add sudo check function
-async function isSudo(userId) {
+// Vérification des administrateurs
+async function estSuperUtilisateur(idUtilisateur) {
     try {
-        const data = loadUserGroupData();
-        return data.sudo && data.sudo.includes(userId);
-    } catch (error) {
-        console.error('Error checking sudo:', error);
+        const donnees = chargerDonneesGroupe();
+        return donnees.superUtilisateurs?.includes(idUtilisateur) || false;
+    } catch (erreur) {
+        console.error('Erreur lors de la vérification des permissions :', erreur);
         return false;
     }
 }
 
-// Add these functions
-async function addWelcome(jid, enabled, message) {
+// Messages de bienvenue et d’adieu
+async function activerBienvenue(idGroupe, actif, message) {
     try {
-        const data = loadUserGroupData();
-        if (!data.welcome) data.welcome = {};
+        const donnees = chargerDonneesGroupe();
+        if (!donnees.bienvenue) donnees.bienvenue = {};
         
-        data.welcome[jid] = {
-            enabled: enabled,
-            message: message || 'Welcome {user} to the group! 🎉'
+        donnees.bienvenue[idGroupe] = {
+            actif: actif,
+            message: message || 'Bienvenue {utilisateur} dans le groupe ! 🎉'
         };
         
-        saveUserGroupData(data);
+        sauvegarderDonneesGroupe(donnees);
         return true;
-    } catch (error) {
-        console.error('Error in addWelcome:', error);
+    } catch (erreur) {
+        console.error('Erreur lors de l’activation du message de bienvenue :', erreur);
         return false;
     }
 }
 
-async function delWelcome(jid) {
+async function desactiverBienvenue(idGroupe) {
     try {
-        const data = loadUserGroupData();
-        if (data.welcome && data.welcome[jid]) {
-            delete data.welcome[jid];
-            saveUserGroupData(data);
+        const donnees = chargerDonneesGroupe();
+        if (donnees.bienvenue?.[idGroupe]) {
+            delete donnees.bienvenue[idGroupe];
+            sauvegarderDonneesGroupe(donnees);
         }
         return true;
-    } catch (error) {
-        console.error('Error in delWelcome:', error);
+    } catch (erreur) {
+        console.error('Erreur lors de la désactivation du message de bienvenue :', erreur);
         return false;
     }
 }
 
-async function isWelcomeOn(jid) {
+async function estBienvenueActive(idGroupe) {
     try {
-        const data = loadUserGroupData();
-        return data.welcome && data.welcome[jid] && data.welcome[jid].enabled;
-    } catch (error) {
-        console.error('Error in isWelcomeOn:', error);
+        const donnees = chargerDonneesGroupe();
+        return donnees.bienvenue?.[idGroupe]?.actif || false;
+    } catch (erreur) {
+        console.error('Erreur lors de la vérification du message de bienvenue :', erreur);
         return false;
     }
 }
 
-async function addGoodbye(jid, enabled, message) {
+async function activerAdieu(idGroupe, actif, message) {
     try {
-        const data = loadUserGroupData();
-        if (!data.goodbye) data.goodbye = {};
+        const donnees = chargerDonneesGroupe();
+        if (!donnees.adieu) donnees.adieu = {};
         
-        data.goodbye[jid] = {
-            enabled: enabled,
-            message: message || 'Goodbye {user} 👋'
+        donnees.adieu[idGroupe] = {
+            actif: actif,
+            message: message || 'Au revoir {utilisateur} 👋'
         };
         
-        saveUserGroupData(data);
+        sauvegarderDonneesGroupe(donnees);
         return true;
-    } catch (error) {
-        console.error('Error in addGoodbye:', error);
+    } catch (erreur) {
+        console.error('Erreur lors de l’activation du message d’adieu :', erreur);
         return false;
     }
 }
 
-async function delGoodBye(jid) {
+async function desactiverAdieu(idGroupe) {
     try {
-        const data = loadUserGroupData();
-        if (data.goodbye && data.goodbye[jid]) {
-            delete data.goodbye[jid];
-            saveUserGroupData(data);
+        const donnees = chargerDonneesGroupe();
+        if (donnees.adieu?.[idGroupe]) {
+            delete donnees.adieu[idGroupe];
+            sauvegarderDonneesGroupe(donnees);
         }
         return true;
-    } catch (error) {
-        console.error('Error in delGoodBye:', error);
+    } catch (erreur) {
+        console.error('Erreur lors de la désactivation du message d’adieu :', erreur);
         return false;
     }
 }
 
-async function isGoodByeOn(jid) {
+async function estAdieuActive(idGroupe) {
     try {
-        const data = loadUserGroupData();
-        return data.goodbye && data.goodbye[jid] && data.goodbye[jid].enabled;
-    } catch (error) {
-        console.error('Error in isGoodByeOn:', error);
+        const donnees = chargerDonneesGroupe();
+        return donnees.adieu?.[idGroupe]?.actif || false;
+    } catch (erreur) {
+        console.error('Erreur lors de la vérification du message d’adieu :', erreur);
         return false;
     }
 }
 
-// Add these functions to your existing SQL helper file
-async function setAntiBadword(groupId, type, action) {
+// Protection contre les mots interdits
+async function definirAntiMauvaisMot(idGroupe, etat, action) {
     try {
-        const data = loadUserGroupData();
-        if (!data.antibadword) data.antibadword = {};
-        if (!data.antibadword[groupId]) data.antibadword[groupId] = {};
+        const donnees = chargerDonneesGroupe();
+        if (!donnees.antiMots) donnees.antiMots = {};
         
-        data.antibadword[groupId] = {
-            enabled: type === 'on',
-            action: action || 'delete'
+        donnees.antiMots[idGroupe] = {
+            actif: etat === 'activer',
+            action: action || 'supprimer'
         };
         
-        saveUserGroupData(data);
+        sauvegarderDonneesGroupe(donnees);
         return true;
-    } catch (error) {
-        console.error('Error setting antibadword:', error);
+    } catch (erreur) {
+        console.error('Erreur lors de la configuration de l’anti-mots interdits :', erreur);
         return false;
     }
 }
 
-async function getAntiBadword(groupId, type) {
+async function obtenirAntiMauvaisMot(idGroupe) {
     try {
-        const data = loadUserGroupData();
-        console.log('Loading antibadword config for group:', groupId);
-        console.log('Current data:', data.antibadword);
-        
-        if (!data.antibadword || !data.antibadword[groupId]) {
-            console.log('No antibadword config found');
-            return null;
-        }
-        
-        const config = data.antibadword[groupId];
-        console.log('Found config:', config);
-        
-        return type === 'on' ? config : null;
-    } catch (error) {
-        console.error('Error getting antibadword:', error);
+        const donnees = chargerDonneesGroupe();
+        return donnees.antiMots?.[idGroupe] || null;
+    } catch (erreur) {
+        console.error('Erreur lors de la récupération de l’anti-mots interdits :', erreur);
         return null;
     }
 }
 
-async function removeAntiBadword(groupId, type) {
+async function supprimerAntiMauvaisMot(idGroupe) {
     try {
-        const data = loadUserGroupData();
-        if (data.antibadword && data.antibadword[groupId]) {
-            delete data.antibadword[groupId];
-            saveUserGroupData(data);
+        const donnees = chargerDonneesGroupe();
+        if (donnees.antiMots?.[idGroupe]) {
+            delete donnees.antiMots[idGroupe];
+            sauvegarderDonneesGroupe(donnees);
         }
         return true;
-    } catch (error) {
-        console.error('Error removing antibadword:', error);
-        return false;
-    }
-}
-
-async function setChatbot(groupId, enabled) {
-    try {
-        const data = loadUserGroupData();
-        if (!data.chatbot) data.chatbot = {};
-        
-        data.chatbot[groupId] = {
-            enabled: enabled
-        };
-        
-        saveUserGroupData(data);
-        return true;
-    } catch (error) {
-        console.error('Error setting chatbot:', error);
-        return false;
-    }
-}
-
-async function getChatbot(groupId) {
-    try {
-        const data = loadUserGroupData();
-        return data.chatbot?.[groupId] || null;
-    } catch (error) {
-        console.error('Error getting chatbot:', error);
-        return null;
-    }
-}
-
-async function removeChatbot(groupId) {
-    try {
-        const data = loadUserGroupData();
-        if (data.chatbot && data.chatbot[groupId]) {
-            delete data.chatbot[groupId];
-            saveUserGroupData(data);
-        }
-        return true;
-    } catch (error) {
-        console.error('Error removing chatbot:', error);
+    } catch (erreur) {
+        console.error('Erreur lors de la suppression de l’anti-mots interdits :', erreur);
         return false;
     }
 }
 
 module.exports = {
-    // ... existing exports
-    setAntilink,
-    getAntilink,
-    removeAntilink,
-    incrementWarningCount,
-    resetWarningCount,
-    isSudo,
-    addWelcome,
-    delWelcome,
-    isWelcomeOn,
-    addGoodbye,
-    delGoodBye,
-    isGoodByeOn,
-    setAntiBadword,
-    getAntiBadword,
-    removeAntiBadword,
-    setChatbot,
-    getChatbot,
-    removeChatbot,
-}; 
+    definirAntiLien,
+    obtenirAntiLien,
+    supprimerAntiLien,
+    ajouterAvertissement,
+    reinitialiserAvertissements,
+    estSuperUtilisateur,
+    activerBienvenue,
+    desactiverBienvenue,
+    estBienvenueActive,
+    activerAdieu,
+    desactiverAdieu,
+    estAdieuActive,
+    definirAntiMauvaisMot,
+    obtenirAntiMauvaisMot,
+    supprimerAntiMauvaisMot
+};
