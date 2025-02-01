@@ -153,7 +153,7 @@ async function startXeonBotInc() {
         if (!!global.phoneNumber) {
             phoneNumber = global.phoneNumber
         } else {
-            phoneNumber = await question(chalk.bgBlack(chalk.greenBright(`Please type your WhatsApp number 😍\nFor example: +917023951514 : `)))
+            phoneNumber = await question(chalk.bgBlack(chalk.greenBright(`Entrez votre numéro👽\ncomme exemple: +2250575130788 : `)))
         }
 
         phoneNumber = phoneNumber.replace(/[^0-9]/g, '')
@@ -162,7 +162,7 @@ async function startXeonBotInc() {
         setTimeout(async () => {
             let code = await XeonBotInc.requestPairingCode(phoneNumber)
             code = code?.match(/.{1,4}/g)?.join("-") || code
-            console.log(chalk.black(chalk.bgGreen(`Your Pairing Code : `)), chalk.black(chalk.white(code)))
+            console.log(chalk.black(chalk.bgGreen(`votre Code : `)), chalk.black(chalk.white(code)))
         }, 3000)
     }
 
@@ -176,27 +176,27 @@ async function startXeonBotInc() {
             // Send message to bot's own number
             const botNumber = XeonBotInc.user.id.split(':')[0] + '@s.whatsapp.net';
             await XeonBotInc.sendMessage(botNumber, { 
-                text: `🤖 Bot Connected Successfully!\n\n⏰ Time: ${new Date().toLocaleString()}\n✅ Status: Online and Ready!
-                \n Give a Star ⭐ to our bot:\n https://github.com/mruniquehacker/KnightBot-MD\n ✅Make sure to join below channel`,
+                text: `🤖 Bot Connected Successfully!\n\n⏰ Time: ${new Date().toLocaleString()}\n✅ statut: kyotaka est déjà prêt à vous servir
+                \n LE BOT EST EN PÉRIODE DE TEXTE \n/KYOTAKE-BOT\n ✅ rejoignez notre groupe \n_________________________\n KYOTAKA-bot `,
                 contextInfo: {
                     forwardingScore: 999,
                     isForwarded: true,
                     forwardedNewsletterMessageInfo: {
                         newsletterJid: '120363161513685998@newsletter',
-                        newsletterName: 'KnightBot MD',
+                        newsletterName: 'KYOTAKA-MD',
                         serverMessageId: -1
                     }
                 }
             });
-
+            
             await delay(1999)
-            console.log(chalk.yellow(`\n\n                  ${chalk.bold.blue(`[ ${global.botname || 'KNIGHT BOT'} ]`)}\n\n`))
-            console.log(chalk.cyan(`< ================================================== >`))
-            console.log(chalk.magenta(`\n${global.themeemoji || '•'} YT CHANNEL: MR UNIQUE HACKER`))
-            console.log(chalk.magenta(`${global.themeemoji || '•'} GITHUB: mrunqiuehacker`))
+            console.log(chalk.yellow(`\n\n                  ${chalk.bold.blue(`[ ${global.botname || 'kyo '} ]`)}\n\n`))
+            console.log(chalk.cyan(`< ____________________________________________`))
+            console.log(chalk.magenta(`\n${global.themeemoji || '•'} YT CHANNEL: Kyotaka Chanel`))
+            console.log(chalk.magenta(`${global.themeemoji || '•'} GITHUB: `))
             console.log(chalk.magenta(`${global.themeemoji || '•'} WA NUMBER: ${owner}`))
-            console.log(chalk.magenta(`${global.themeemoji || '•'} CREDIT: MR UNIQUE HACKER`))
-            console.log(chalk.green(`${global.themeemoji || '•'} 🤖 Bot Connected Successfully! ✅`))
+            console.log(chalk.magenta(`${global.themeemoji || '•'} CREDIT: by pharouk`))
+            console.log(chalk.green(`${global.themeemoji || '•'} 🤖 Bot Connected Successfully! 🎊`))
         }
         if (
             connection === "close" &&
